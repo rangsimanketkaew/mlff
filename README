@@ -1,0 +1,181 @@
+## How to train a force field model ##
+
+Rangsiman Ketkaew
+May 8th, 2020
+
+##########################
+## List of code scripts ##
+##########################
+
+- README
+- calc_stats.py
+- join_txt_files.py
+- kmeans-clustering.py
+- plot_cross_corr_matrix.py
+- plot_rama_psi_phi.py
+- split_2_datasets.py
+- split_3_datasets.py
+- step_1_orca_to_extxyz.py
+- step_2_rmsd_clustering.py
+- step_3_form_clusters.py
+- step_4_sample_geom_randomly.py
+- step_5_extxyz_to_npz.py
+- step_6_sgdml_train_model.py
+
+
+###################
+## Prerequisites ##
+###################
+
+Step 1. Update and upgrade your Linux's packages, for example,
+
+	$ sudo apt update && sudo apt upgrade -y
+
+Step 2. Download Miniconda's Python from https://docs.conda.io/en/latest/miniconda.html to your Linux system.
+
+	$ wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+
+Step 3. Install Anaconda or Miniconda by executing bash installer. Both of them provide the same Conda's Python distribution, 
+but the difference is that miniconda comes with only standard python libraries.
+
+	$ sh Miniconda3-latest-Linux-x86_64.sh
+
+Step 4. Activate conda environment:
+
+	$ conda activate
+
+5. Install the following packages using conda
+
+	$ conda update --all -y
+	$ conda install numpy
+	$ conda install -c openbabel openbabel      # this will also install pybel
+	$ conda install scipy
+	$ conda install scikit-learn
+	$ conda install matplotlib
+	$ conda install pip
+	$ conda install -c rangsiman rmsd
+
+6. Install the following packages using pip
+
+	$ pip install ase
+	$ pip install sgdml      # the current stable version on the day of this writing is 0.4.3
+
+
+#########################################################
+## Preparing/Clustering/Sampling/Splitting the dataset ##
+#########################################################
+
+Step 1. Suppose that we have many MP2 geometry optimization output files (*.out) stored in for example "/home/nutt/mp2/*.out" folder. You can use "step_1_orca_to_extxyz.py" script to extract the cartesian coordinate and gradients of all geometries from all output files. The script will then save all results as an extended xyz file. A newly created extended xyz will be written, "sGDML_dataset_from_MP2.xyz", in the folder where you executed the script.
+
+	# Note:
+	# Here is an example of extended xyz file format required by sGDML
+	#--------------------------------------------------------
+	#
+	#   no. of atoms
+	#   reference energy
+	#   atom_1 coord_x coord_y coord_z grad_x grad_y grad_z
+	#   atom_2 coord_x coord_y coord_z grad_x grad_y grad_z
+	#   ...
+	#
+	#--------------------------------------------------------
+
+	INPUT:
+	$ step_1_orca_to_extxyz.py /home/nutt/mp2/
+	
+	OUTPUT:
+	sGDML_dataset_from_MP2.xyz
+
+Step 2. Now you are ready for your conformers/geometries clustering. You can use "step_2_rmsd_clustering.py" script to separate the conformers that have the similar structure. You also need to specify the RMSD cutoff, i.e. 1.0 Angstrom, for the clustering. After the clustering is completed, there will be three output files created in the folder. You can also name these three output files by using optional parameters (-od for distance matrix output and -oc for clustering output). Distance calculation can be speeded up by using parallel multiprocessors using -np flag.
+
+	INPUT:
+	$ step_2_rmsd_clustering.py sGDML_dataset_from_MP2.xyz 1.0 -od dist_matrix.dat -oc clusters.dat -np 4
+	
+	OUTPUT:
+	clusters.dat
+	dist_matrix.dat
+	summary_clusters.dat
+
+Step 3. A "clusters.dat" file created from previous step contains a list of number (index) of the cluster to which each geometry belongs. You can use "step_3_form_clusters.py" script to form the clusters and write the extended xyz for each cluster.
+
+	INPUT:
+	$ step_3_form_clusters.py sGDML_dataset_from_MP2.xyz clusters.dat
+	
+	OUTPUT:
+	clusters_1.xyz
+	clusters_2.xyz
+	clusters_3.xyz
+	clusters_4.xyz
+	clusters_5.xyz
+	clusters_6.xyz
+	clusters_7.xyz
+
+Step 4. Then, we will randomly draw N geometries out of every cluster and combine them into the same classified cluster, where N could be any positive integer. We use this kind of strategy as we want to make sure that each classified cluster represents the most different structures of the conformers. So this can be done by "step_4_sample_geom_randomly.py" script.
+
+	INPUT:
+	$ step_4_sample_geom_randomly.py 'clusters_*.xyz' 10
+	
+	# NOTE: An asterisk (*) in the name of the first argument is a placeholder for positive integer starting from 1, 2, 3..., N corresponding the the cluster files that created in (3).
+	
+	OUTPUT:
+	cluster_sampled_cluster-1_split-1_size-10.xyz
+	cluster_sampled_cluster-1_split-2_size-6.xyz
+	cluster_sampled_cluster-2_split-1_size-2.xyz
+	cluster_sampled_cluster-3_split-1_size-3.xyz
+	cluster_sampled_cluster-4_split-1_size-5.xyz
+	cluster_sampled_cluster-5_split-1_size-5.xyz
+	cluster_sampled_cluster-6_split-1_size-2.xyz
+	cluster_sampled_cluster-7_split-1_size-10.xyz
+	cluster_sampled_cluster-7_split-2_size-1.xyz
+
+Step 5. Now we have to join the sampled clusters together by using "join_txt_files.py" script to form the final sampled cluster.
+
+	INPUT:
+	$ join_txt_files.py '*_split-1_*' final_sampled_cluster_dataset.xyz
+	
+	OUTPUT:
+	final_sampled_cluster_dataset.xyz
+
+Step 6. Since you need to feed three datasets: actual training set, validation set, test set, into the sGDML for training our model, you could use "split_3_datasets.py" script to split the dataset into such three sub-datasets. The script will split up the initial dataset into two sub-datasets first: training set and test test, then the training set will be splitted again into actual training set and validation set. The data point for each sub-dataset will depend on the split ratio (%) you specified. Generall, the split ratio of 80%, 20% and 20% is worth trying.
+
+	INPUT:
+	$ split_3_datasets.py final_sampled_cluster_dataset.xyz 80 20 20
+	
+	OUTPUT:
+	final_sampled_cluster_dataset_actualtrain_80.0%_24.xyz
+	final_sampled_cluster_dataset_valid_20.0%_6.xyz
+	final_sampled_cluster_dataset_test_20.0%_7.xyz
+
+	# NOTE: The number at the end of output file name is the number of data points (geometries) in a dataset after splitting
+
+Step 6. Use "step_5_extxyz_to_npz.py" script to convert all needed extxyz files to npz (numpy zip file).
+
+	INPUT:
+	$ step_5_extxyz_to_npz.py final_sampled_cluster_dataset_actualtrain_80.0%_24.xyz
+	$ step_5_extxyz_to_npz.py final_sampled_cluster_dataset_valid_20.0%_6.xyz
+	$ step_5_extxyz_to_npz.py final_sampled_cluster_dataset_test_20.0%_7.xyz
+	
+	OUTPUT:
+	final_sampled_cluster_dataset_actualtrain_80.0%_24.npz
+	final_sampled_cluster_dataset_valid_20.0%_6.npz
+	final_sampled_cluster_dataset_test_20.0%_7.npz
+
+Step 7. Now you are ready to train the force field model using sGDML. Even though the "step_6_sgdml_train_model.py" script can do this for you but I would suggest you to try to train the model via sGDML's command-line first. Once the training is completed, it will eventually write you a trained force field model (*.npz), which contains all data about energies and forces prediction.
+
+	# NOTE: There will be 5 steps that sGDML will do:
+	# 1. Kernel matrix formation
+	# 2. Model training
+	# 3. Validation
+	# 4. Hyper-parameter selection
+	# 5. Testing
+
+	INPUT:
+	$ sgdml all final_sampled_cluster_dataset_actualtrain_80.0%_24.npz 24 6 7 \
+		--validation_dataset final_sampled_cluster_dataset_valid_20.0%_6.npz \
+		--test_dataset final_sampled_cluster_dataset_test_20.0%_7.npz
+	
+	OUTPUT:
+	final_sampled_cluster_dataset_actualtrain_80.0%_24-unknown-train24-sym1.npz
+
+
+%%%%%%%%%%%%%%%  Have fun!  %%%%%%%%%%%%%%% 
+
