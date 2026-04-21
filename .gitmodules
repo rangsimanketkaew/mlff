@@ -1,3 +1,6 @@
 [submodule "mpnn"]
 	path = mpnn
 	url = https://github.com/rangsimanketkaew/mpnn
+[submodule "TransformerEngine"]
+	path = TransformerEngine
+	url = git@github.com:rangsimanketkaew/TransformerEngine.git
