@@ -1,10 +1,11 @@
 # MLOps for Machine Learning Force Fields (MLFF) at Scale on HPC
 
-Author: Rangsiman Ketkaew
+Author: [Rangsiman Ketkaew](https://rangsimanketkaew.github.io/)
 
-Let's do something fun and efficien. In this folder we will explor how to train an MLFF model and make it run efficiently on AWS cloud.
+Let's do something fun and efficient. In this folder we will explor how to train an MLFF model and make it run efficiently on AWS cloud.
 
 ## What we have here
+
 1. [MLFF lifecycle & Pipeline architecture](#1-mlff-lifecycle--pipeline-architecture)
 2. [Development & Data Engineering](#2-development--data-engineering)
 3. [Distributed Training at Scale (HPC & AWS)](#3-distributed-training-at-scale-hpc--aws)
@@ -36,14 +37,14 @@ graph TD
 
 ### Data formats & featurization (extracting features)
 
-* **Input data**: Raw QC database inputs are stored in `.extxyz` (Extended XYZ) files, ASE databases (`.db`), or specialized chemical formats containing coordinates ($R$), forces ($F$), atomic numbers ($Z$), cell matrices, and potential energies ($E$).
+* *Input data*: Raw QC database inputs are stored in `.extxyz` (Extended XYZ) files, ASE databases (`.db`), or specialized chemical formats containing coordinates ($R$), forces ($F$), atomic numbers ($Z$), cell matrices, and potential energies ($E$).
 
-* **Graph representation**: Atomic configurations are featurized as molecular graphs where nodes are atoms and edges are chemical bonds or distance-based neighbor connections.
+* *Graph representation*: Atomic configurations are featurized as molecular graphs where nodes are atoms and edges are chemical bonds or distance-based neighbor connections.
 
-* **Libraries**:
-  * *ASE (Atomic Simulation Environment)*: The standard toolkit for setting up, manipulating, and analyzing structures.
-  * *PyTorch Geometric (PyG)* or *DGL*: For constructing the message-passing and equivariant graphs.
-  * *e3nn* / *MACE*: For constructing rotationally equivariant networks (tensor products of spherical harmonics).
+* *Libraries*:
+  * [ASE](https://wiki.fysik.dtu.dk/ase/) or Atomic Simulation Environment - the standard toolkit for setting up, manipulating, and analyzing structures
+  * [PyTorch Geometric (PyG)](https://pytorch-geometric.readthedocs.io/en/latest/) or DGL - for constructing the message-passing and equivariant graphs
+  * [e3nn](https://github.com/e3nn/e3nn) - for constructing rotationally equivariant networks (tensor products of spherical harmonics)
 
 ### Efficient Graph Generation & Neighbor Lists
 
@@ -69,23 +70,21 @@ This creates a **double-gradient graph** during training (autograd through autog
 2. increases computation time significantly.
 3. requires advanced memory optimization techniques like activation checkpointing or float16/bfloat16 mixed precision.
 
-### HPC Distributed Architecture (e.g., SLURM Clusters)
+### HPC distributed architecture (e.g., SLURM Clusters)
 
-* **High-Speed Interconnect**: HPC systems use InfiniBand or Slingshot with GPUDirect RDMA.
+* *Distributed engines* - Run PyTorch `DistributedDataParallel` (DDP) or `Fully Sharded Data Parallel` (FSDP) to shard model parameters, gradients, and optimizer states across multiple nodes.
 
-* **Distributed Engines**: Run PyTorch `DistributedDataParallel` (DDP) or `Fully Sharded Data Parallel` (FSDP) to shard model parameters, gradients, and optimizer states across multiple nodes.
+* *Launcher* - Run scripts using `torchrun` wrapped in a SLURM script allocating nodes.
 
-* **Launcher**: Run scripts using `torchrun` wrapped in a SLURM script allocating nodes.
-
-### AWS Cloud Distributed Architecture
+### AWS cloud distributed architecture
 
 AWS provides managed elastic infrastructure for scaling up training
 
-* **Storage**: Store training datasets (tens of millions of structures) on **Amazon FSx for Lustre** linked to an **Amazon S3** bucket. This ensures sub-millisecond latencies and high throughput for multiple parallel GPU workers.
+* *Storage*: Store training datasets (tens of millions of structures) on Amazon FSx for Lustre linked to an Amazon S3 bucket. This ensures sub-millisecond latencies and high throughput for multiple parallel GPU workers.
 
-* **Compute**: Use **AWS SageMaker** PyTorch Estimators or **Amazon EKS** (Kubernetes) with EC2 instances like `p4d.24xlarge` (8x NVIDIA A100 GPUs) or `p5.48xlarge` (8x NVIDIA H100 GPUs).
+* *Compute*: Use AWS SageMaker PyTorch Estimators or Amazon EKS (Kubernetes) with EC2 instances like `p4d.24xlarge` (8x NVIDIA A100 GPUs) or `p5.48xlarge` (8x NVIDIA H100 GPUs).
 
-* **Network**: Leverage **Elastic Fabric Adapter (EFA)** for distributed communication matching HPC-level InfiniBand speeds.
+* *Network*: Leverage Elastic Fabric Adapter (EFA) for distributed communication matching HPC-level InfiniBand speeds.
 
 ## 4. Model Validation & Active Learning
 
@@ -93,25 +92,25 @@ AWS provides managed elastic infrastructure for scaling up training
 
 MLFF performance must satisfy both thermodynamic and kinetic criteria
 
-* **Energy Accuracy**: Mean Absolute Error (MAE) and Root Mean Squared Error (RMSE) below chemical accuracy ($1 \text{ kcal/mol} \approx 0.043 \text{ eV/atom}$).
+* **Energy accuracy**: Mean Absolute Error (MAE) and Root Mean Squared Error (RMSE) below chemical accuracy ($1 \text{ kcal/mol} \approx 0.043 \text{ eV/atom}$).
 
-* **Force Accuracy**: MAE/RMSE below $0.05 \text{ eV/Å}$ or $1 \text{ kcal/mol/Å}$.
+* **Force accuracy**: MAE/RMSE below $0.05 \text{ eV/Å}$ or $1 \text{ kcal/mol/Å}$.
 
-* **Physical Constraints**: Energy-force consistency (forces must exactly equal the negative gradient of energy), rotational covariance, and translational invariance.
+* **Physical constraints**: Energy-force consistency (forces must exactly equal the negative gradient of energy), rotational covariance, and translational invariance.
 
 ### Active Learning Loops
 
 MLFF models will encounter out-of-distribution (OOD) configurations during molecular dynamics (MD) simulations. So, we have to automate a robust active learning cycle.
 
-1. **Explore**: Run MD simulations (e.g. at high temperatures, like 500 K) using the current MLFF model
+1. **Explore** - Run MD simulations (e.g. at high temperatures, like 500 K) using the current MLFF model
 
-2. **Query**: Compute model uncertainty (e.g., variance of forces predicted by an ensemble of models or GP prediction intervals)
+2. **Query** - Compute model uncertainty (e.g., variance of forces predicted by an ensemble of models or GP prediction intervals)
 
-3. **Verify**: If force variance exceeds a threshold (e.g., $\sigma_F > 0.15 \text{ eV/Å}$), halt the simulation and extract the structure
+3. **Verify** - If force variance exceeds a threshold (e.g., $\sigma_F > 0.15 \text{ eV/Å}$), halt the simulation and extract the structure
 
-4. **Label**: Run a DFT calculation on the structure to compute the exact energy and forces
+4. **Label** - Run a DFT calculation on the structure to compute the exact energy and forces
 
-5. **Retrain**: Update the training dataset with the new data points and retrain the model
+5. **Retrain** - Update the training dataset with the new data points and retrain the model
 
 ## 5. High-Throughput Serving & Deployment
 
@@ -119,14 +118,15 @@ Once trained, models must be served to downstream applications (high-throughput 
 
 ### Triton Inference Server
 
-* Convert the PyTorch model to **TorchScript** or **ONNX** formats
-* Deploy onto **Triton Inference Server** to leverage
-  1. Dynamic batching (grouping individual molecular requests from parallel MD simulations).
-  2. Concurrent model execution across GPU instances.
-  3. Low-latency serving over gRPC.
+* Convert the PyTorch model to TorchScript or ONNX formats
+* Deploy onto Triton Inference Server to leverage
+  1. Dynamic batching (grouping individual molecular requests from parallel MD simulations)
+  2. Concurrent model execution across GPU instances
+  3. Low-latency serving over gRPC
 
 ### Serverless APIs / FastAPI
-For lighter applications, deploy via **FastAPI** running on AWS ECS or AWS Lambda, exposing
+
+For lighter applications, deploy via FastAPI running on AWS ECS or AWS Lambda, exposing
 
 * `/predict`: Expects an atomic coordinate dictionary (species and positions), returns energy and forces.
 
@@ -142,11 +142,11 @@ Deploying MLFFs in production requires monitoring structural integrity to preven
 
 * *Uncertainty Tracking*: Ensemble variance or Bayesian Neural Networks (BNNs).
 
-* *Structural Descriptors*: Map configurations into descriptors like **SOAP (Smooth Overlap of Atomic Positions)** or **ACE (Atomic Cluster Expansion)** and perform real-time distance calculations against reference distributions using Kernel Density Estimation (KDE) or PCA.
+* *Structural Descriptors*: Map configurations into descriptors like *SOAP (Smooth Overlap of Atomic Positions)* or *ACE (Atomic Cluster Expansion)* and perform real-time distance calculations against reference distributions using Kernel Density Estimation (KDE) or PCA.
 
 ### Metrics & dashboards
 
-* Log metrics using **Prometheus**:
+* Log metrics using Prometheus
   * `mlff_prediction_force_uncertainty`
   * `mlff_minimum_interatomic_distance`
   * `mlff_inference_latency_ms`
