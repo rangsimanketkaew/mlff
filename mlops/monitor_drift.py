@@ -4,7 +4,6 @@ import os
 import json
 import argparse
 import numpy as np
-from scipy.stats import ks_2samp
 
 
 class StructuralDriftDetector:

@@ -5,9 +5,10 @@ import argparse
 import numpy as np
 import torch
 import torch.nn as nn
+import uvicorn
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import uvicorn
 from ase import Atoms
 from ase.calculators.calculator import Calculator, all_changes
 from ase.optimize import LBFGS
@@ -74,7 +75,7 @@ class MLFFCalculator(Calculator):
             self.results['forces'] = forces_pred.detach().cpu().numpy().astype(np.float64)
             
         except Exception:
-            self.results['energy'] = -100.0
+            self.results['energy'] = -100.0 # dummy value
             self.results['forces'] = np.zeros_like(positions)
 
 
