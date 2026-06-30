@@ -1,0 +1,11 @@
+numpy
+torch
+ase
+torch-geometric
+mlflow
+fastapi
+pydantic
+uvicorn
+scipy
+boto3
+sagemaker
