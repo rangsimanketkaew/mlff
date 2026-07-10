@@ -13,3 +13,6 @@
 [submodule "KERMT"]
 	path = KERMT
 	url = https://github.com/NVIDIA-BioNeMo/KERMT
+[submodule "bionemo-recipes"]
+	path = bionemo-recipes
+	url = https://github.com/NVIDIA-BioNeMo/bionemo-recipes
