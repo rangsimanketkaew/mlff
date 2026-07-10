@@ -7,3 +7,6 @@
 [submodule "TransforMol"]
 	path = TransforMol
 	url = https://github.com/rangsimanketkaew/TransforMol
+[submodule "fairchem"]
+	path = fairchem
+	url = https://github.com/facebookresearch/fairchem
