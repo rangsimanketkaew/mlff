@@ -10,3 +10,6 @@
 [submodule "fairchem"]
 	path = fairchem
 	url = https://github.com/facebookresearch/fairchem
+[submodule "KERMT"]
+	path = KERMT
+	url = https://github.com/NVIDIA-BioNeMo/KERMT
