@@ -4,3 +4,6 @@
 [submodule "TransformerEngine"]
 	path = TransformerEngine
 	url = git@github.com:rangsimanketkaew/TransformerEngine.git
+[submodule "TransforMol"]
+	path = TransforMol
+	url = https://github.com/rangsimanketkaew/TransforMol
