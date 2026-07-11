@@ -2,6 +2,8 @@
 
 Repository for MLOps pipeline for training, deploying, and monitoring MLFFs for chemistry and drug discovery.
 
+*The terms Machine Learning Force Field (MLFF) and Machine Learning Interatomic Potential (MLIP) are used interchangeably.*
+
 ## MLFF for (Quantum) Chemistry and Drug Discovery
 
 Foundation models such as **UMA** (Universal Models for Atoms) and **MACE** (Message Passing Atomic Cluster Expansion) use massive pre-training datasets to capture complex, multi-body interactions and physical symmetries of molecules. In drug discovery, these pre-trained potentials allow for rapid, high-fidelity geometry optimizations, conformer searches, and molecular dynamics simulations of drug-target complexes without requiring system-specific retraining.
