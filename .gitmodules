@@ -19,3 +19,6 @@
 [submodule "mace"]
 	path = mace
 	url = https://github.com/ACEsuit/mace
+[submodule "mattersim"]
+	path = mattersim
+	url = https://github.com/microsoft/mattersim
