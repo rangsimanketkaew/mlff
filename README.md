@@ -37,6 +37,62 @@ Our pipeline consists of the following components under the [mlops/](mlops) fold
 * **[submit_hpc.sh](mlops/submit_hpc.sh)**: A SLURM submit template for multi-node, multi-GPU training clusters via `torchrun`.
 * **[run_sagemaker.py](mlops/run_sagemaker.py)**: AWS SageMaker SDK launcher targeting large multi-GPU instances (e.g. `ml.p4d.24xlarge`) utilizing FSx for Lustre.
 
+## 🤖 Agent skills
+
+Specialized agent skills have been integrated under the `.agents/skills/` directory to guide AI (like Claude and Gemini) through computational chemistry and ML interatomic potential development tasks.
+
+### 📋 Skill Agents Registry
+
+| Skill / Component | Agent Name | Action / Purpose |
+| :--- | :--- | :--- |
+| **Molecular Graph & Scaffold Splitting** | `ScaffoldSplitAgent` | Prevents chemical space data leakage between train/val/test splits. |
+| **Multi-Task Learning with ACS** | `MultitaskACSAgent` | Mitigates negative transfer by checkpointing task-specific states independently. |
+| **Differentiable Information Imbalance** | `DIIFeatureSelector` | Selects relevant molecular feature subsets via gradient descent. |
+| **Deep Ensembles UQ** | `EnsembleUQAgent` | Partitions total predictive uncertainty into aleatoric and epistemic components. |
+| **Activity Cliff Awareness** | `ActivityCliffAgent` | Adjusts representation coordinates around cliff compounds using TSM loss. |
+| **Delta-ML & Transfer Learning** | `DeltaTransferMLAgent` | Achieves chemical accuracy with small high-fidelity data via pre-training/fine-tuning. |
+| **Conformation Generation & DFT Input** | `ConformationDFTAgent` | Prepares optimized conformer coordinates and inputs for DFT (ORCA/Gaussian) solvers. |
+| **MLIP ASE Calculators** | `MLIPASECalculatorAgent` | Bridges PyTorch ML models to the Atomic Simulation Environment interface. |
+| **Geometry Optimization & MD** | `ASEDynamicsAgent` | Relaxes configurations and evaluates thermodynamic trajectory snapshots. |
+| **MLIP Active Learning Loops** | `MLIPActiveLearningAgent` | Automates database expansion focusing labeling budgets on high-uncertainty regions. |
+
+### ⚙️ How to setup & use skill agents
+
+Customizations are automatically discovered and loaded by agentic platforms (like Google Gemini and Anthropic Claude systems supporting custom workspace contexts) from standard workspace or global roots.
+
+#### 1. Installation
+To install the skills in your active workspace, copy or create the skills directory in the workspace root:
+
+```bash
+# Workspace level installation
+mkdir -p .agents/skills/
+cp -r path/to/skills/* .agents/skills/
+```
+
+Alternatively, for **global installation** across all projects, copy the skills into the global config folder:
+
+```bash
+# Global configuration level
+mkdir -p ~/.gemini/config/skills/
+cp -r path/to/skills/* ~/.gemini/config/skills/
+```
+
+#### 2. How it works
+
+Every skill folder contains a `SKILL.md` manifest with frontmatter (e.g. `name` and `description` triggers).
+When you prompt Claude or Gemini in the IDE with a related task (e.g. *"Run a Langevin dynamics simulation on this structure"*), the agent:
+1. Triggers matching rules based on your query description.
+2. Automatically loads the instructions inside `SKILL.md`.
+3. Discovers the target helper script and executes it or guides you in running it.
+
+#### 3. Manual command execution
+
+You can also run any of the helper scripts directly from your terminal using the commands listed in the registry table above. Ensure dependencies (`torch`, `ase`, `rdkit`, `numpy`) are installed in your active Python environment:
+
+```bash
+pip install torch ase numpy rdkit
+```
+
 ### 👨‍💻 Author
 
 [Rangsiman Ketkaew](https://rangsimanketkaew.github.io/) <br>

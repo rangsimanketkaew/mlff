@@ -1,0 +1,26 @@
+{
+  "name": "mlff-skills",
+  "description": "Specialized agent skills for Machine Learning Force Field (MLFF/MLIP) training, geometry optimization, molecular dynamics, and active learning.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Rangsiman Ketkaew",
+    "email": "rangsiman1993@gmail.com"
+  },
+  "homepage": "https://github.com/rangsimanketkaew/mlff",
+  "repository": "https://github.com/rangsimanketkaew/mlff",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "chemistry",
+    "drug-discovery",
+    "machine-learning",
+    "force-field",
+    "machine-learning-force-field",
+    "machine-learning-interatomic-potential",
+    "molecular-dynamics",
+    "active-learning",
+    "density-functional-theory",
+    "molecular-property",
+    "conformation-generation"
+  ]
+}
