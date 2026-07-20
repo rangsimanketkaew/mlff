@@ -1,4 +1,4 @@
-# Foundation Machine Learning Force Field (MLFF) at Scale
+# Foundation Machine Learning for Chemistry and Drug Discovery at Scale
 
 Repository for MLOps pipeline for training, deploying, and monitoring MLFFs for chemistry and drug discovery.
 
